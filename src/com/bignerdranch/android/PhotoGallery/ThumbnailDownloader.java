@@ -19,26 +19,22 @@ import java.util.Map;
  * Time: 오후 5:44
  * To change this template use File | Settings | File Templates.
  */
+
 public class ThumbnailDownloader<Token> extends HandlerThread {
     private static final String TAG = "PhotoGallery - ThumbnailDownloader";
     private static final int MESSAGE_DOWNLOAD = 0;
     Handler mHandler;
     Map<Token, String> requestMap = Collections.synchronizedMap(new HashMap<Token, String>());
-
     Handler mResponseHandler;
     Listener<Token> mListener;
-
-    public interface Listener<Token> {
-        void onThumbnailDownloaded(Token token, Bitmap thumbnail);
-    }
-
-    public void setListener(Listener<Token> listener){
-        mListener = listener;
-    }
 
     public ThumbnailDownloader(Handler responseHandler) {
         super(TAG);
         mResponseHandler = responseHandler;
+    }
+
+    public void setListener(Listener<Token> listener) {
+        mListener = listener;
     }
 
     /**
@@ -51,7 +47,7 @@ public class ThumbnailDownloader<Token> extends HandlerThread {
             public void handleMessage(Message msg) {
                 if (msg.what == MESSAGE_DOWNLOAD) {
                     Token token = (Token) msg.obj;
-                    Log.i(TAG, "Got a request for url: " + requestMap.get(token));
+//                    Log.i(TAG, "Got a request for url: " + requestMap.get(token));
                     handleRequest(token);
                 }
             }
@@ -65,13 +61,13 @@ public class ThumbnailDownloader<Token> extends HandlerThread {
 
             byte[] bitmapBytes = new FlickrFetchr().getUrlBytes(url);
             final Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapBytes, 0, bitmapBytes.length);
-            Log.i(TAG, "Bitmap is created...................");
+//            Log.i(TAG, "Bitmap is created...................");
 
             mResponseHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     //This is necessary because the GridView recycles its view.
-                    if(requestMap.get(token) != url) return;
+                    if (requestMap.get(token) != url) return;
 
                     requestMap.remove(token);
                     mListener.onThumbnailDownloaded(token, bitmap);
@@ -83,13 +79,17 @@ public class ThumbnailDownloader<Token> extends HandlerThread {
     }
 
     public void queueThumbnail(Token token, String url) {
-        Log.i(TAG, "Got an URL: " + url);
+//        Log.i(TAG, "Got an URL: " + url);
         requestMap.put(token, url);
         mHandler.obtainMessage(MESSAGE_DOWNLOAD, token).sendToTarget();
     }
 
-    public void clearQueue(){
+    public void clearQueue() {
         mHandler.removeMessages(MESSAGE_DOWNLOAD);
         requestMap.clear();
+    }
+
+    public interface Listener<Token> {
+        void onThumbnailDownloaded(Token token, Bitmap thumbnail);
     }
 }
